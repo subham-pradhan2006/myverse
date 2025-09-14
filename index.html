@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ultimate Dashboard Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --primary:#6f42c1; --secondary:#ff6b6b; --bg:#f7f9fc; --card-bg:#fff; --text:#222; --muted:#666; --shadow:0 4px 12px rgba(0,0,0,0.1);
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Roboto',sans-serif;}
+body{background:var(--bg);color:var(--text);transition:0.5s;}
+.dark{--bg:#1a1a1a;--card-bg:#2c2c2c;--text:#f0f0f0;--muted:#aaa;--primary:#9b59b6;--secondary:#e74c3c;}
+header{background:var(--card-bg);padding:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;box-shadow:var(--shadow);border-radius:0 0 15px 15px;animation:fadeInDown 1s;}
+header h1{font-weight:700;font-size:1.8em;color:var(--primary);}
+header .date{font-weight:500;color:var(--muted);}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:25px;padding:25px;animation:fadeIn 1s;}
+.card{background:var(--card-bg);padding:20px;border-radius:15px;box-shadow:var(--shadow);transition:transform 0.3s, background 0.5s;position:relative;overflow:hidden;}
+.card:hover{transform:translateY(-8px);box-shadow:0 0 20px var(--primary);}
+.card h3{margin-bottom:15px;color:var(--primary);cursor:pointer;}
+.collapsible{max-height:2000px;overflow:hidden;transition:max-height 0.5s ease;}
+input,select,button{padding:8px 10px;margin:5px 0;border-radius:8px;border:1px solid #ccc;font-size:0.9em;}
+button{cursor:pointer;background:var(--primary);color:#fff;border:none;transition:0.3s;}
+button:hover{background:var(--secondary);box-shadow:0 0 10px var(--secondary);}
+.todo-list div{display:flex;justify-content:space-between;align-items:center;padding:6px 0;transition:all 0.3s;}
+.todo-list div.done span{text-decoration:line-through;color:var(--muted);}
+.notes-board{display:flex;flex-wrap:wrap;gap:8px;}
+.note{padding:10px;background:linear-gradient(120deg,#e0c3fc,#8ec5fc);border-radius:10px;min-width:120px;cursor:pointer;transition:transform 0.3s,box-shadow 0.3s;}
+.note:hover{transform:scale(1.05);box-shadow:0 0 12px #fff;}
+.timer-display{text-align:center;font-size:2.2em;font-weight:bold;margin:10px 0;}
+.mood-btn{font-size:2em;border:none;background:transparent;cursor:pointer;margin:0 5px;transition:transform 0.3s;}
+.mood-btn:hover{transform:scale(1.4);}
+.expense-table{width:100%;border-collapse:collapse;margin-top:10px;}
+.expense-table th, .expense-table td{border:1px solid #ccc;padding:8px;text-align:center;}
+.expense-table th{background:var(--primary);color:#fff;}
+.dark .expense-table th{background:var(--secondary);}
+.chart-container{width:100%;height:220px;margin-top:20px;}
+.fab{position:fixed;bottom:25px;right:25px;width:60px;height:60px;border-radius:50%;background:var(--primary);color:#fff;font-size:2em;display:flex;justify-content:center;align-items:center;cursor:pointer;box-shadow:var(--shadow);transition:0.3s;}
+.fab:hover{background:var(--secondary);transform:scale(1.1);}
+.theme-toggle{position:fixed;top:25px;right:25px;width:45px;height:45px;border-radius:50%;background:var(--primary);color:#fff;font-size:1.5em;display:flex;justify-content:center;align-items:center;cursor:pointer;box-shadow:var(--shadow);transition:0.3s;}
+.theme-toggle:hover{background:var(--secondary);transform:scale(1.1);}
+.mode-toggle{margin-top:10px;}
+.notification{position:absolute;top:10px;right:10px;background:var(--secondary);color:#fff;padding:6px 10px;border-radius:8px;opacity:0;animation:fadeInOut 2s forwards;}
+.fly-notify{position:absolute;background:var(--primary);color:#fff;padding:5px 10px;border-radius:8px;font-weight:bold;animation:flyToList 1s forwards;pointer-events:none;z-index:1000;}
+.confetti-piece{position:absolute;width:8px;height:8px;opacity:0.9;animation:confettiFall linear forwards;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+@keyframes fadeInDown{from{opacity:0;transform:translateY(-30px);}to{opacity:1;transform:translateY(0);}}
+@keyframes fadeInOut{0%{opacity:0;}10%{opacity:1;}90%{opacity:1;}100%{opacity:0;}}
+@keyframes flyToList{0%{transform:translateY(0) scale(1);}50%{transform:translate(-100px,-50px) scale(1.2);}100%{transform:translate(0,-10px) scale(1);}}
+@keyframes confettiFall{0%{transform:translateY(0) rotate(0deg);}100%{transform:translateY(300px) rotate(360deg); opacity:0;}}
+@media(max-width:600px){header{flex-direction:column;align-items:flex-start;}}
+</style>
+</head>
+<body>
+
+<header style=" z-index:100; background:var(--card-bg);">
+  <h1>MyVerse</h1>
+  <div class="date" id="today"></div>
+</header>
+
+<div class="grid">
+
+<!-- TASKS -->
+<div class="card">
+  <h3 onclick="toggleCollapse(this)">Tasks ▼</h3>
+  <div class="collapsible">
+    <input type="text" id="taskInput" placeholder="Task name">
+    <select id="taskPriority"><option>Low</option><option>Medium</option><option>High</option></select>
+    <button onclick="addTaskAnimated()">Add Task</button>
+    <div class="todo-list" id="taskList"></div>
+  </div>
+</div>
+
+<!-- TIMER -->
+<div class="card">
+  <h3 onclick="toggleCollapse(this)">Focus Timer ▼</h3>
+  <div class="collapsible">
+    <div class="timer-display" id="timerDisplay">25:00</div>
+    <div style="justify-content:center; display:flex; gap:10px;">
+    <button onclick="startTimer()">Start</button>
+    <button onclick="pauseTimer()">Pause</button>
+    <button onclick="resetTimer()">Reset</button>
+    </div>
+  </div>
+</div>
+
+<!-- NOTES -->
+<div class="card">
+  <h3 onclick="toggleCollapse(this)">Notes ▼</h3>
+  <div class="collapsible">
+    <input type="text" id="noteInput" placeholder="Add note">
+    <button onclick="addNote()">Add Note</button>
+    <div class="notes-board" id="notesBoard"></div>
+  </div>
+</div>
+
+<!-- MOOD -->
+<div class="card">
+  <h3 onclick="toggleCollapse(this)">Mood Tracker ▼</h3>
+  <div class="collapsible">
+    <div>
+      <button class="mood-btn" onclick="recordMoodAnimated(1)">😞</button>
+      <button class="mood-btn" onclick="recordMoodAnimated(2)">😐</button>
+      <button class="mood-btn" onclick="recordMoodAnimated(3)">🙂</button>
+      <button class="mood-btn" onclick="recordMoodAnimated(4)">😊</button>
+      <button class="mood-btn" onclick="recordMoodAnimated(5)">🤩</button>
+    </div>
+    <div id="moodDisplay"></div>
+    <canvas id="moodChart" class="chart-container"></canvas>
+  </div>
+</div>
+
+<!-- EXPENSES -->
+<div class="card">
+  <h3 onclick="toggleCollapse(this)">Daily Expenses ▼</h3>
+  <div class="collapsible">
+    <input type="text" id="expenseDesc" placeholder="Description">
+    <input type="number" id="expenseAmount" placeholder="Amount">
+    <button onclick="addExpense()">Add Expense</button>
+    <table class="expense-table" id="expenseTable"><thead><tr><th>Description</th><th>Amount</th><th>Action</th></tr></thead><tbody></tbody></table>
+    <div>Total: $<span id="totalExpense">0</span></div>
+    <canvas id="expenseChart" class="chart-container"></canvas>
+  </div>
+</div>
+
+<div class="card">
+  <h3 onclick="toggleCollapse(this)">Movies Watched ▼</h3>
+  <div class="collapsible">
+    <input type="text" id="movieInput" placeholder="Add movie..." style="width:70%;">
+    <button onclick="addMovie()">Add</button>
+    <ul id="movieList" style="margin-top:10px;"></ul>
+  </div>
+</div>
+
+<script>
+let movies = JSON.parse(localStorage.getItem('movies') || '[]');
+
+function addMovie() {
+  const input = document.getElementById('movieInput');
+  const title = input.value.trim();
+  if(!title) return;
+  movies.push({title, date: new Date().toLocaleDateString()});
+  localStorage.setItem('movies', JSON.stringify(movies));
+  input.value = '';
+  renderMovies();
+}
+
+function renderMovies() {
+  const ul = document.getElementById('movieList');
+  ul.innerHTML = '';
+  movies.forEach((m, i) => {
+    const li = document.createElement('li');
+    li.innerHTML = `<strong>${m.title}</strong> (${m.date}) 
+                    <button onclick="deleteMovie(${i})">Delete</button>`;
+    li.style.transition = "all 0.3s";
+    li.onmouseover = ()=>li.style.transform="scale(1.05)";
+    li.onmouseout = ()=>li.style.transform="scale(1)";
+    ul.appendChild(li);
+  });
+}
+
+function deleteMovie(index) {
+  movies.splice(index, 1);
+  localStorage.setItem('movies', JSON.stringify(movies));
+  renderMovies();
+}
+
+renderMovies();
+</script>
+
+<div class="card">
+  <h3 onclick="toggleCollapse(this)">Music Player ▼</h3>
+  <div class="collapsible">
+    <!-- Upload music -->
+    <input type="file" id="musicUpload" accept="audio/*" multiple>
+    <input type="text" id="musicSearch" placeholder="Search song..." style="width:60%;">
+    <ul id="musicList" style="margin-top:10px;"></ul>
+    <audio id="player" controls style="width:100%; margin-top:10px;"></audio>
+  </div>
+</div>
+
+<script>
+let musicFiles = JSON.parse(localStorage.getItem('musicFiles') || '[]');
+
+// Render music list
+function renderMusicList() {
+  const searchTerm = document.getElementById('musicSearch').value.toLowerCase();
+  const ul = document.getElementById('musicList');
+  ul.innerHTML = '';
+
+  musicFiles
+    .filter(m => m.name.toLowerCase().includes(searchTerm))
+    .forEach((m, i) => {
+      const li = document.createElement('li');
+      li.innerHTML = `<span style="cursor:pointer; color:blue;" onclick="playMusic(${i})">${m.name}</span> 
+                      <button onclick="deleteMusic(${i})">Delete</button>`;
+      li.style.transition = "all 0.3s";
+      li.onmouseover = ()=>li.style.transform="scale(1.05)";
+      li.onmouseout = ()=>li.style.transform="scale(1)";
+      ul.appendChild(li);
+    });
+}
+
+// Upload music files
+document.getElementById('musicUpload').addEventListener('change', (e)=>{
+  const files = Array.from(e.target.files);
+  files.forEach(f => {
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      musicFiles.push({name: f.name, url: event.target.result});
+      localStorage.setItem('musicFiles', JSON.stringify(musicFiles));
+      renderMusicList();
+    }
+    reader.readAsDataURL(f);
+  });
+  e.target.value = ''; // reset file input
+});
+
+// Play selected music
+function playMusic(index) {
+  const player = document.getElementById('player');
+  player.src = musicFiles[index].url;
+  player.play();
+}
+
+// Delete music
+function deleteMusic(index) {
+  musicFiles.splice(index,1);
+  localStorage.setItem('musicFiles', JSON.stringify(musicFiles));
+  renderMusicList();
+}
+
+// Search music
+document.getElementById('musicSearch').addEventListener('input', renderMusicList);
+
+renderMusicList();
+</script>
+
+
+<!-- CHATBOT -->
+<div class="card">
+  <h3 onclick="toggleCollapse(this)">Personal AI Assistant ▼</h3>
+  <div class="collapsible">
+    <!-- Mode Selection -->
+    <div class="mode-toggle">
+      <label><input type="radio" name="aiMode" value="offline" checked> Offline</label>
+      <label><input type="radio" name="aiMode" value="online"> Online</label>
+    </div>
+
+    <!-- Chat Window -->
+    <div id="chatWindow" style="height:250px; overflow-y:auto; background:#f0f0f0; border-radius:8px; padding:10px; margin-bottom:10px;"></div>
+
+    <!-- Input & Send -->
+    <input type="text" id="chatInput" placeholder="Ask something..." style="width:80%;">
+    <button onclick="sendMessage()">Send</button>
+  </div>
+</div>
+
+<script>
+let aiMode = 'offline'; // default mode
+
+// Listen to mode changes
+document.querySelectorAll('input[name="aiMode"]').forEach(radio => {
+  radio.addEventListener('change', () => {
+    aiMode = radio.value;
+    addChatMessage('Bot: Switched to ' + aiMode + ' mode');
+  });
+});
+
+// Add message to chat window
+function addChatMessage(msg) {
+  const chatWindow = document.getElementById('chatWindow');
+  const p = document.createElement('p');
+  p.textContent = msg;
+  chatWindow.appendChild(p);
+  chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+
+// Offline bot logic
+function offlineBot(msg) {
+  const lower = msg.toLowerCase();
+  let reply = '';
+
+  if (lower.includes('hello') || lower.includes('hi')) reply = 'Hello! How can I help you today?';
+  else if (lower.includes('time')) reply = 'Current time is ' + new Date().toLocaleTimeString();
+  else if (lower.includes('date')) reply = 'Today is ' + new Date().toLocaleDateString();
+  else if (lower.includes('task')) reply = 'You can add a task using the Task section.';
+  else if (lower.includes('note')) reply = 'Use the Notes section to add your notes.';
+  else if (lower.includes('mood')) reply = 'Record your mood using the Mood Tracker section.';
+  else if (lower.includes('expense')) reply = 'Track your expenses in the Daily Expenses section.';
+  else if (lower.includes('timer')) reply = 'Start the Focus Timer to stay productive!';
+  else {
+    const generic = [
+      "I'm not sure about that, try asking something else!",
+      "Sorry, I don't understand.",
+      "Can you rephrase that?",
+      "Try asking about tasks, notes, mood, expenses, or timer."
+    ];
+    reply = generic[Math.floor(Math.random() * generic.length)];
+  }
+
+  addChatMessage('Bot: ' + reply);
+}
+// Send message function
+function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+
+  addChatMessage('You: ' + text);
+  input.value = '';
+
+  if (aiMode === 'offline') {
+    offlineBot(text);
+  } else {
+    onlineBot(text);
+  }
+}
+</script>
+
+
+</div>
+<div class="theme-toggle" onclick="toggleTheme()">🌓</div>
+<div class="fab" onclick="openChat()">💬</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// ===== DATE =====
+document.getElementById('today').textContent=new Date().toLocaleDateString();
+
+// ===== COLLAPSIBLE =====
+function toggleCollapse(el){const content=el.nextElementSibling;content.style.maxHeight=content.style.maxHeight?null:content.scrollHeight+'px';}
+
+// ===== NOTIFICATIONS =====
+function notify(msg){
+  const div=document.createElement('div');div.className='notification';div.textContent=msg;document.body.appendChild(div);setTimeout(()=>div.remove(),2000);
+}
+
+// ===== FLYING TASK NOTIFICATION =====
+function flyNotification(msg,startX,startY){
+  const div=document.createElement('div');div.className='fly-notify';div.textContent=msg;div.style.left=startX+'px';div.style.top=startY+'px';document.body.appendChild(div);setTimeout(()=>div.remove(),1000);
+}
+
+// ===== TASKS =====
+let tasks=JSON.parse(localStorage.getItem('tasks')||'[]');
+function renderTasks(){const container=document.getElementById('taskList');container.innerHTML='';tasks.forEach((t,i)=>{const div=document.createElement('div');div.innerHTML=`<span>[${t.priority}] ${t.text}</span><button onclick="toggleTask(${i})">✔</button><button onclick="deleteTask(${i})">x</button>`;if(t.done) div.classList.add('done');container.appendChild(div);});}
+function addTask(){const text=document.getElementById('taskInput').value.trim();const priority=document.getElementById('taskPriority').value;if(!text)return;tasks.push({text,priority,done:false});localStorage.setItem('tasks',JSON.stringify(tasks));document.getElementById('taskInput').value='';renderTasks();notify('Task Added');renderTasks();}
+function addTaskAnimated(){const input=document.getElementById('taskInput');const text=input.value.trim();if(!text)return;const rect=input.getBoundingClientRect();flyNotification(text,rect.left,rect.top);addTask();}
+function toggleTask(i){tasks[i].done=!tasks[i].done;localStorage.setItem('tasks',JSON.stringify(tasks));renderTasks();}
+function deleteTask(i){tasks.splice(i,1);localStorage.setItem('tasks',JSON.stringify(tasks));renderTasks();}
+renderTasks();
+
+// ===== TIMER =====
+let timerDuration=25*60,timerRemaining=25*60,timerInterval=null;
+function updateTimer(){const m=Math.floor(timerRemaining/60),s=timerRemaining%60;document.getElementById('timerDisplay').textContent=`${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;}
+function startTimer(){if(timerInterval)return;timerInterval=setInterval(()=>{if(timerRemaining>0){timerRemaining--;updateTimer();}else{clearInterval(timerInterval);timerInterval=null;notify('Session Complete!');timerRemaining=timerDuration;updateTimer();}},1000);}
+function pauseTimer(){if(timerInterval){clearInterval(timerInterval);timerInterval=null;}}
+function resetTimer(){pauseTimer();timerRemaining=timerDuration;updateTimer();}
+updateTimer();
+
+// ===== NOTES =====
+let notes=JSON.parse(localStorage.getItem('notes')||'[]');
+function renderNotes(){const board=document.getElementById('notesBoard');board.innerHTML='';notes.forEach((n,i)=>{const div=document.createElement('div');div.className='note';div.textContent=n;div.onclick=()=>{if(confirm('Delete note?')){notes.splice(i,1);localStorage.setItem('notes',JSON.stringify(notes));renderNotes();notify('Note Deleted');}};board.appendChild(div);});}
+function addNote(){const val=document.getElementById('noteInput').value.trim();if(!val)return;notes.push(val);localStorage.setItem('notes',JSON.stringify(notes));document.getElementById('noteInput').value='';renderNotes();notify('Note Added');}
+renderNotes();
+
+// ===== MOOD =====
+let moods=JSON.parse(localStorage.getItem('moods')||'[]');
+function displayMood(){document.getElementById('moodDisplay').textContent='Today moods: '+moods.map(m=>'😞😐🙂😊🤩'[m.value-1]).join(' ');}
+displayMood();
+let moodChart=null;
+function renderMoodChart(){const ctx=document.getElementById('moodChart').getContext('2d');const dates=[...new Set(moods.map(m=>m.date))];const values=dates.map(d=>{const day=moods.filter(m=>m.date===d); return Math.round(day.reduce((a,b)=>a+b.value,0)/day.length);});if(moodChart) moodChart.destroy();moodChart=new Chart(ctx,{type:'line',data:{labels:dates,datasets:[{label:'Mood',data:values,borderColor:'#6f42c1',backgroundColor:'rgba(111,66,193,0.2)',fill:true,tension:0.4}]}});}
+function createConfetti(x,y){for(let i=0;i<15;i++){const c=document.createElement('div');c.className='confetti-piece';c.style.left=x+'px';c.style.top=y+'px';c.style.background=`hsl(${Math.random()*360},100%,50%)`;c.style.animationDuration=(1+Math.random())+'s';document.body.appendChild(c);setTimeout(()=>c.remove(),1200);}}
+function recordMoodAnimated(val){const btn=document.querySelectorAll('.mood-btn')[val-1];const rect=btn.getBoundingClientRect();createConfetti(rect.left+10,rect.top+10);recordMood(val);}
+function recordMood(val){moods.push({date:new Date().toLocaleDateString(),value:val});localStorage.setItem('moods',JSON.stringify(moods));displayMood();renderMoodChart();notify('Mood Recorded');}
+renderMoodChart();
+
+// ===== EXPENSES =====
+let expenses=JSON.parse(localStorage.getItem('expenses')||'[]');
+function renderExpenses(){const tbody=document.getElementById('expenseTable').querySelector('tbody');tbody.innerHTML='';let total=0;expenses.forEach((e,i)=>{total+=parseFloat(e.amount);const tr=document.createElement('tr');tr.innerHTML=`<td>${e.desc}</td><td>$${e.amount}</td><td><button onclick="deleteExpense(${i})">Delete</button></td>`;tbody.appendChild(tr);});document.getElementById('totalExpense').textContent=total.toFixed(2);renderExpenseChartAnimated();}
+function addExpense(){const desc=document.getElementById('expenseDesc').value.trim();const amount=document.getElementById('expenseAmount').value.trim();if(!desc||!amount)return;expenses.push({desc,amount});localStorage.setItem('expenses',JSON.stringify(expenses));document.getElementById('expenseDesc').value='';document.getElementById('expenseAmount').value='';renderExpenses();notify('Expense Added');}
+function deleteExpense(i){expenses.splice(i,1);localStorage.setItem('expenses',JSON.stringify(expenses));renderExpenses();notify('Expense Deleted');}
+renderExpenses();
+let expenseChartAnimated=null;
+function renderExpenseChartAnimated(){const ctx=document.getElementById('expenseChart').getContext('2d');if(expenseChartAnimated) expenseChartAnimated.destroy();expenseChartAnimated=new Chart(ctx,{type:'bar',data:{labels:expenses.map(e=>e.desc),datasets:[{label:'Amount',data:expenses.map(e=>0),backgroundColor:'#6f42c1'}]},options:{animation:{duration:800,easing:'easeOutBounce'}}});let i=0;function growBars(){if(i>=expenses.length) return;expenseChartAnimated.data.datasets[0].data[i]=expenses[i].amount;expenseChartAnimated.update();i++;setTimeout(growBars,150);}growBars();}
+// ===== FLOATING BUTTONS =====
+function openChat(){window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});}
+function toggleTheme(){document.body.classList.toggle('dark');}
+</script>
+
+</body>
+</html>
