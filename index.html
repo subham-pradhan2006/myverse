@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My Verse</title>
+<title>Ultimate Dashboard Pro</title>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -73,17 +73,84 @@ button:hover{background:var(--secondary);box-shadow:0 0 10px var(--secondary);}
 </div>
 
 <!-- TIMER -->
+<!-- TIMER -->
+<!-- TIMER -->
 <div class="card">
   <h3 onclick="toggleCollapse(this)">Focus Timer ▼</h3>
   <div class="collapsible">
-    <div class="timer-display" id="timerDisplay">25:00</div>
-    <div style="justify-content:center; display:flex; gap:10px;">
-    <button onclick="startTimer()">Start</button>
-    <button onclick="pauseTimer()">Pause</button>
-    <button onclick="resetTimer()">Reset</button>
+    <div class="timer-display" style="display:flex; gap:5px;justify-content: center;">
+      <input type="number" id="hours" placeholder="H" min="0" style="width:70px;">
+      <input type="number" id="minutes" placeholder="M" min="0" max="59" style="width:70px;">
+      <input type="number" id="seconds" placeholder="S" min="0" max="59" style="width:70px;">
     </div>
+    <div style="justify-content:center; display:flex; gap:10px; margin-top:10px;">
+      <button onclick="startTimer()">Start</button>
+      <button onclick="pauseTimer()">Pause</button>
+      <button onclick="resetTimer()">Reset</button>
+    </div>
+    <h2 id="timerDisplay">0:00:00</h2>
   </div>
 </div>
+
+<!-- Add your audio file -->
+<audio id="alarmSound" src="alarm.mp3" preload="auto"></audio>
+
+<script>
+let timer;
+let remainingTime = 0;
+let isPaused = false;
+
+function startTimer() {
+  if (!remainingTime || remainingTime === 0) {
+    const h = parseInt(document.getElementById("hours").value) || 0;
+    const m = parseInt(document.getElementById("minutes").value) || 0;
+    const s = parseInt(document.getElementById("seconds").value) || 0;
+    remainingTime = h * 3600 + m * 60 + s;
+  }
+
+  if (remainingTime <= 0) return;
+
+  isPaused = false;
+  clearInterval(timer);
+  timer = setInterval(() => {
+    if (!isPaused && remainingTime > 0) {
+      remainingTime--;
+      displayTime(remainingTime);
+    } else if (remainingTime <= 0) {
+      clearInterval(timer);
+      displayTime(0);
+      document.getElementById("alarmSound").play(); // Play ringtone
+      alert("Time's up!");
+    }
+  }, 1000);
+}
+
+function pauseTimer() {
+  isPaused = true;
+}
+
+function resetTimer() {
+  clearInterval(timer);
+  remainingTime = 0;
+  displayTime(0);
+}
+
+function displayTime(seconds) {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  document.getElementById("timerDisplay").innerText =
+    `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+}
+
+// Optional: collapsible
+function toggleCollapse(element) {
+  const content = element.nextElementSibling;
+  content.style.display = content.style.display === "block" ? "none" : "block";
+}
+</script>
+
+
 
 <!-- NOTES -->
 <div class="card">
@@ -322,10 +389,10 @@ function sendMessage() {
 
 </div>
 <div class="theme-toggle" onclick="toggleTheme()">🌓</div>
-<div class="fab" onclick="openChat()">💬</div>
 
+<!-- FOOTER -->
 <footer style="text-align:center; padding:10px; font-size:14px; color:#555;margin: 40px;">
-  Made with ❤️ by Subham Creation | &copy; 2025 All rights reserved by Subham.
+  Made with ❤️ by Subham Creation | &copy; 2025 Subham. All rights reserved.
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -355,13 +422,6 @@ function toggleTask(i){tasks[i].done=!tasks[i].done;localStorage.setItem('tasks'
 function deleteTask(i){tasks.splice(i,1);localStorage.setItem('tasks',JSON.stringify(tasks));renderTasks();}
 renderTasks();
 
-// ===== TIMER =====
-let timerDuration=25*60,timerRemaining=25*60,timerInterval=null;
-function updateTimer(){const m=Math.floor(timerRemaining/60),s=timerRemaining%60;document.getElementById('timerDisplay').textContent=`${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;}
-function startTimer(){if(timerInterval)return;timerInterval=setInterval(()=>{if(timerRemaining>0){timerRemaining--;updateTimer();}else{clearInterval(timerInterval);timerInterval=null;notify('Session Complete!');timerRemaining=timerDuration;updateTimer();}},1000);}
-function pauseTimer(){if(timerInterval){clearInterval(timerInterval);timerInterval=null;}}
-function resetTimer(){pauseTimer();timerRemaining=timerDuration;updateTimer();}
-updateTimer();
 
 // ===== NOTES =====
 let notes=JSON.parse(localStorage.getItem('notes')||'[]');
@@ -395,4 +455,3 @@ function toggleTheme(){document.body.classList.toggle('dark');}
 
 </body>
 </html>
-
